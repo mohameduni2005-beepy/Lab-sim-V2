@@ -1,0 +1,6 @@
+{
+  "appId": "com.circuitjumper.app",
+  "appName": "Circuit Jumper",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}

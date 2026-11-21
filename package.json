@@ -1,0 +1,11 @@
+{
+  "name": "circuit-jumper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cambridge Technologies trainer panels - interactive jumper wiring and simulation",
+  "scripts": {
+    "serve": "npx serve www",
+    "sync": "npx cap sync android",
+    "open": "npx cap open android"
+  }
+}
