@@ -171,26 +171,15 @@
       if (!vis(p.id)) return;
       const o = origin[p.id], x = o.x * s + view.tx, y = o.y * s + view.ty, w = PANEL_W * s, h = p.h * K * s, rc = CORNER * s;
       if (x > CW || y > CH || x + w < 0 || y + h < 0) return;
-      const barH = Math.max(22, 30 * s), pad = Math.max(6, 10 * s);
-      // card shadow + body
-      c.fillStyle = "rgba(0,0,0,.45)"; rr(c, x + 4, y + 8, w + 8, h + barH + 22 * s, rc + 6); c.fill();
-      const g = c.createLinearGradient(x, y, x, y + h + barH);
-      g.addColorStop(0, "#0c2552"); g.addColorStop(1, "#071a3f");
-      c.fillStyle = g; c.strokeStyle = "#29b6f6"; c.lineWidth = 2;
-      rr(c, x - pad, y - barH - pad, w + 2 * pad, h + barH + 2 * pad, rc + 8); c.fill(); c.stroke();
-      // title bar
-      c.fillStyle = "#0e2e66"; c.save(); rr(c, x - pad, y - barH - pad, w + 2 * pad, barH + pad, rc + 8); c.fill(); c.restore();
-      c.fillStyle = "#ffc20e"; c.font = "bold " + Math.max(11, 15 * s) + "px Segoe UI, Arial, sans-serif"; c.textBaseline = "middle";
-      c.fillText("\u26A1 " + p.title, x + pad + 4, y - barH / 2 - pad / 2);
-      c.strokeStyle = "#29b6f6"; c.lineWidth = 1.5; c.beginPath(); c.arc(x + w - pad - 2, y - barH / 2 - pad / 2, Math.max(7, 9 * s), 0, 6.2832); c.stroke();
-      c.fillStyle = "#29b6f6"; c.font = "bold " + Math.max(9, 11 * s) + "px Segoe UI, Arial"; c.textAlign = "center"; c.fillText("i", x + w - pad - 2, y - barH / 2 - pad / 2 + 1); c.textAlign = "left";
-      // photo area
+      // no boxes around the device: photo only, title as plain text above it
       const im = imgs[p.id];
       c.save(); rr(c, x, y, w, h, rc); c.clip();
       c.fillStyle = "#f4f6fa"; c.fillRect(x, y, w, h);
       if (im && im.complete && im.naturalWidth) c.drawImage(im, x, y, w, h); else { c.fillStyle = "#334"; c.fillRect(x, y, w, h); }
       c.restore();
-      c.strokeStyle = "#29b6f6"; c.lineWidth = 1.5; rr(c, x, y, w, h, rc); c.stroke();
+      const fs = Math.max(11, 14 * s), ty = y - Math.max(8, 10 * s);
+      c.font = "bold " + fs + "px Segoe UI, Arial, sans-serif"; c.textBaseline = "alphabetic"; c.fillStyle = "#ffc20e";
+      c.fillText("\u26A1 " + p.title, x + 2, ty);
       c.textBaseline = "alphabetic";
     });
     // terminals & switches
@@ -240,6 +229,29 @@
 
   function drawDynamic() {
     const c = ctx, s = view.s;
+    const live = st.sim.run && st.sim.main && st.wires.length > 0;
+    const breathe = 0.5 + 0.5 * Math.sin(phase * 2 * Math.PI);
+    if (live) {
+      c.save(); c.lineCap = "round"; c.lineJoin = "round";
+      st.wires.forEach((w, i) => {
+        if (!wireVisible(w)) return;
+        const P = wirePts(i);
+        c.strokeStyle = "rgba(255,230,120," + (0.12 + 0.18 * breathe).toFixed(3) + ")";
+        c.lineWidth = wireWidth(w) + 6 + 4 * breathe;
+        c.beginPath(); c.moveTo(P[0][0], P[0][1]);
+        for (let k = 1; k < P.length; k++) c.lineTo(P[k][0], P[k][1]);
+        c.stroke();
+      });
+      c.restore();
+    }
+    if (live) {
+      for (const id in items) {
+        if (items[id].kind !== "s" || !st.sw[id] || !vis(items[id].panel)) continue;
+        const [x, y] = itemPos(id), rad = Math.max(12, 18 * s) * (1 + 0.35 * breathe);
+        c.save(); c.strokeStyle = "rgba(57,255,20," + (0.7 - 0.5 * breathe).toFixed(3) + ")";
+        c.lineWidth = 2; c.beginPath(); c.arc(x, y, rad, 0, 6.2832); c.stroke(); c.restore();
+      }
+    }
     // current pulses on the highlighted net
     if (st.hl.size) {
       st.wires.forEach((w, i) => {
@@ -340,7 +352,7 @@
     if (simDirty) recompute();
     let moving = false;
     while (acc >= 50) { acc -= 50; if (stepPhysics()) moving = true; }
-    if (dirty || needRedraw || moving || st.hl.size || st.pending) { render(); needRedraw = false; }
+    if (dirty || needRedraw || moving || st.hl.size || st.pending || (st.sim.run && st.wires.length)) { render(); needRedraw = false; }
     updateConn();
   }
 
