@@ -10,12 +10,37 @@
 <title>Circuit Jumper</title>
 </head>
 <body>
+<div id="splash" class="splash" aria-hidden="true">
+  <picture>
+    <source media="(orientation: landscape)" srcset="img/splash-landscape.jpg">
+    <img src="img/splash-portrait.jpg" alt="Labtronic" class="splash-img">
+  </picture>
+</div>
 <header id="hdr">
-  <svg class="bolt" viewBox="0 0 48 56" aria-hidden="true"><polygon points="30,2 6,32 22,32 16,54 42,22 26,22" fill="#ffd60a"/></svg>
-  <div class="ttl"><b>CIRCUIT JUMPER</b><small>Cambridge Technologies trainer panels</small></div>
-  <svg class="wave" viewBox="0 0 120 30" preserveAspectRatio="none" aria-hidden="true"><path d="M0 15 Q 10 0 20 15 T 40 15 T 60 15 T 80 15 T 100 15 T 120 15" fill="none" stroke="#00e5ff" stroke-width="2"/></svg>
-  <button id="btnFit" class="hb">ملائمة</button>
+  <button id="btnMenu" class="ib" aria-label="menu">
+    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 6h18M3 12h18M3 18h18" stroke="#e8eefc" stroke-width="2.2" stroke-linecap="round"/></svg>
+  </button>
+  <div class="brand">
+    <svg class="bolt" viewBox="0 0 64 64" aria-hidden="true">
+      <ellipse cx="32" cy="34" rx="28" ry="12" transform="rotate(-18 32 34)" fill="none" stroke="#ffc20e" stroke-width="4"/>
+      <polygon points="36,4 14,36 30,36 24,60 50,26 33,26" fill="#29b6f6"/>
+    </svg>
+    <div class="brand-txt"><b><span class="w">Lab</span><span class="c">tronic</span></b><small>Electrical Lab Simulator</small></div>
+  </div>
+  <div class="hbtns">
+    <button id="btnInfo" class="hb2" aria-label="info">i</button>
+    <button id="btnGuide" class="hb2" aria-label="guide">&#x1F4D6;</button>
+    <button id="btnSettings" class="hb2" aria-label="settings">&#9881;</button>
+  </div>
 </header>
+
+<nav id="tabs" class="tabs">
+  <button data-tab="labs" class="tab on">&#x26A1; لوحات التجارب</button>
+  <button data-tab="devices" class="tab">&#x1F4DF; الأجهزة</button>
+  <button data-tab="sim" class="tab">&#x3030; المحاكاة</button>
+  <button data-tab="file" class="tab">&#x1F4C1; ملف</button>
+  <span id="connState" class="conn ready">&#x25CF; جاهز للتوصيل</span>
+</nav>
 
 <div id="stage">
   <canvas id="c"></canvas>
@@ -63,12 +88,18 @@
   </div>
 </div>
 
-<nav id="bar">
-  <button id="bUndo">↶ تراجع</button>
-  <button data-sheet="wire">الأسلاك</button>
-  <button data-sheet="dev">الأجهزة</button>
-  <button data-sheet="sim">المحاكاة</button>
-  <button data-sheet="file">ملف</button>
+<nav id="bar" class="bar">
+  <button id="bUndo" class="tb"><span class="ic">&#x21B6;</span>تراجع</button>
+  <button data-sheet="file" class="tb"><span class="ic">&#x1F4C1;</span>ملف</button>
+  <button id="bRun" class="tb run"><span class="ic">&#x25B6;</span>تشغيل التجربة</button>
+  <button data-sheet="sim" class="tb"><span class="ic">&#x3030;</span>المحاكاة</button>
+  <button id="bWires" class="tb"><span class="ic">&#x2387;</span>الأسلاك</button>
+  <button data-sheet="dev" class="tb"><span class="ic">&#x25A3;</span>الأجهزة</button>
+  <div class="zoomgrp">
+    <button id="zIn" class="tb sm"><span class="ic">+</span>تكبير</button>
+    <button id="zOut" class="tb sm"><span class="ic">&minus;</span>تصغير</button>
+    <button id="btnFit" class="tb sm"><span class="ic">&#x2725;</span>تحريك</button>
+  </div>
 </nav>
 
 <script src="js/data.js"></script>
