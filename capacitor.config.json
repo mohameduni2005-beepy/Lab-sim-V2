@@ -1,6 +1,8 @@
 {
-  "appId": "com.circuitjumper.app",
-  "appName": "Circuit Jumper",
+  "appId": "com.circuitjumper.silent",
+  "appName": "Labtronic Silent",
   "webDir": "www",
-  "server": { "androidScheme": "https" }
+  "server": {
+    "androidScheme": "https"
+  }
 }

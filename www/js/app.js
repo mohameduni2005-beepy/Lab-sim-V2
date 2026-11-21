@@ -603,6 +603,7 @@
   const SFX = { intro: "sounds/intro.mp3", short: "sounds/short.mp3", reverse: "sounds/reverse.mp3", error: "sounds/error.mp3" };
   const sfxCache = {}, sfxLast = {};
   function playSfx(name) {
+    return;   // silent build
     const now = Date.now();
     if (sfxLast[name] && now - sfxLast[name] < 1200) return;      // debounce
     sfxLast[name] = now;
@@ -653,6 +654,7 @@
   // ---- intro sound (synthesized with Web Audio, no file needed) ----
   let introDone = false, introCtx = null;
   function playIntroSound() {
+    return;   // silent build
     if (introDone) return;
     if (typeof Audio !== "undefined") {
       try {
@@ -716,7 +718,7 @@
     status("المس طرف ثم طرف آخر لتوصيل سلك • اضغط مطولاً على طرف لإظهار نفس النقطة • اضغط مطولاً على سلك لحذفه");
     requestAnimationFrame(frame);
     setTimeout(hideSplash, 1800);
-    armIntroSound();
+    // armIntroSound(); // silent build
     window.__cj = { st, view, Sim, tap, longPress, items, origin, itemPos, recompute, render };   // handy for debugging
   }
   boot();
