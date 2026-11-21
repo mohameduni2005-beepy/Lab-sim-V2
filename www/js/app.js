@@ -349,7 +349,7 @@
     requestAnimationFrame(frame);
     if (!lastT) lastT = ts;
     acc += Math.min(200, ts - lastT); lastT = ts;
-    if (simDirty) recompute();
+    if (simDirty) { recompute(); checkEvents(); }
     let moving = false;
     while (acc >= 50) { acc -= 50; if (stepPhysics()) moving = true; }
     if (dirty || needRedraw || moving || st.hl.size || st.pending || (st.sim.run && st.wires.length)) { render(); needRedraw = false; }
@@ -599,6 +599,109 @@
   }
 
   // ------------------------------------------------------------------ boot
+  // ---- sound effects: files in sounds/ with synthesized fallback ----
+  const SFX = { intro: "sounds/intro.mp3", short: "sounds/short.mp3", reverse: "sounds/reverse.mp3", error: "sounds/error.mp3" };
+  const sfxCache = {}, sfxLast = {};
+  function playSfx(name) {
+    const now = Date.now();
+    if (sfxLast[name] && now - sfxLast[name] < 1200) return;      // debounce
+    sfxLast[name] = now;
+    if (typeof Audio !== "undefined" && SFX[name]) {
+      try {
+        const a = sfxCache[name] || (sfxCache[name] = new Audio(SFX[name]));
+        a.currentTime = 0;
+        const p = a.play(); if (p && p.catch) p.then(() => {}, () => playBeep(name));
+        a.onerror = () => playBeep(name);
+        return;
+      } catch (e) { /* fall through */ }
+    }
+    playBeep(name);
+  }
+  function playBeep(name) {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    try {
+      if (!introCtx) introCtx = new AC();
+      if (introCtx.state === "suspended") introCtx.resume();
+      if (introCtx.state !== "running") return;
+      const t0 = introCtx.currentTime, o = introCtx.createOscillator(), g = introCtx.createGain();
+      const f = name === "short" ? 90 : name === "reverse" ? 520 : 300;
+      o.type = name === "short" ? "square" : "triangle";
+      o.frequency.setValueAtTime(f, t0); o.frequency.exponentialRampToValueAtTime(f * 0.6, t0 + 0.35);
+      g.gain.setValueAtTime(0.25, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.4);
+      o.connect(g); g.connect(introCtx.destination); o.start(t0); o.stop(t0 + 0.42);
+    } catch (e) { /* ignore */ }
+  }
+
+  // ---- classify simulation results into sound events (fires once per new problem) ----
+  let prevEvents = new Set();
+  function checkEvents() {
+    const r = st.res, ev = new Set();
+    if (r && st.sim.run && st.sim.main) {
+      (r.warnings || []).forEach(w => {
+        if (/A > rating|A rated/.test(w)) ev.add("short");
+        else if (/over range|V > .*max|V > .*rated/.test(w)) ev.add("error");
+      });
+      Object.keys(r.readings).forEach(id => {
+        const m = r.readings[id];
+        if (m.neg && (m.kind !== "W" || true)) ev.add("reverse");
+      });
+    }
+    ev.forEach(e => { if (!prevEvents.has(e)) playSfx(e); });
+    prevEvents = ev;
+  }
+
+  // ---- intro sound (synthesized with Web Audio, no file needed) ----
+  let introDone = false, introCtx = null;
+  function playIntroSound() {
+    if (introDone) return;
+    if (typeof Audio !== "undefined") {
+      try {
+        const a = new Audio(SFX.intro);
+        a.onerror = () => { introDone = false; playIntroSynth(); };
+        const p = a.play();
+        if (p && p.then) p.then(() => { introDone = true; }, () => { introDone = false; });
+        else introDone = true;
+        if (introDone) return;
+      } catch (e) { /* fall through */ }
+    }
+    playIntroSynth();
+  }
+  function playIntroSynth() {
+    if (introDone) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      if (!introCtx) introCtx = new AC();
+      if (introCtx.state === "suspended") { introCtx.resume(); }
+      if (introCtx.state !== "running") return;   // blocked until the user taps
+      introDone = true;
+      const t0 = introCtx.currentTime, out = introCtx.createGain();
+      out.gain.setValueAtTime(0.0001, t0);
+      out.gain.exponentialRampToValueAtTime(0.18, t0 + 0.05);
+      out.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.4);
+      out.connect(introCtx.destination);
+      // power-up sweep
+      const sw = introCtx.createOscillator(), sg = introCtx.createGain();
+      sw.type = "sawtooth";
+      sw.frequency.setValueAtTime(180, t0);
+      sw.frequency.exponentialRampToValueAtTime(1400, t0 + 0.7);
+      sg.gain.setValueAtTime(0.5, t0); sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.8);
+      sw.connect(sg); sg.connect(out); sw.start(t0); sw.stop(t0 + 0.85);
+      // bright "lock-in" ping
+      const p = introCtx.createOscillator(), pg = introCtx.createGain();
+      p.type = "sine"; p.frequency.setValueAtTime(1760, t0 + 0.62);
+      pg.gain.setValueAtTime(0.0001, t0 + 0.62); pg.gain.exponentialRampToValueAtTime(0.7, t0 + 0.64);
+      pg.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.35);
+      p.connect(pg); pg.connect(out); p.start(t0 + 0.62); p.stop(t0 + 1.4);
+    } catch (e) { /* audio not available */ }
+  }
+  function armIntroSound() {
+    playIntroSound();
+    if (introDone) return;
+    // Android/Chrome block audio until a tap: play on the first touch of the app
+    const once = () => { playIntroSound(); if (introDone) { document.removeEventListener("pointerdown", once); } };
+    document.addEventListener("pointerdown", once);
+  }
   function hideSplash() {
     const sp = document.getElementById("splash"); if (!sp) return;
     sp.classList.add("hide");
@@ -613,6 +716,7 @@
     status("المس طرف ثم طرف آخر لتوصيل سلك • اضغط مطولاً على طرف لإظهار نفس النقطة • اضغط مطولاً على سلك لحذفه");
     requestAnimationFrame(frame);
     setTimeout(hideSplash, 1800);
+    armIntroSound();
     window.__cj = { st, view, Sim, tap, longPress, items, origin, itemPos, recompute, render };   // handy for debugging
   }
   boot();
