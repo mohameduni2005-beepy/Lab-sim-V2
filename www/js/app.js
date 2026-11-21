@@ -538,15 +538,16 @@
     $("zIn").addEventListener("click", () => { zoomAt(1.25, CW / 2, CH / 2); dirty = needRedraw = true; });
     $("zOut").addEventListener("click", () => { zoomAt(0.8, CW / 2, CH / 2); dirty = needRedraw = true; });
     $("bUndo").addEventListener("click", undo);
-    $("bRun").addEventListener("click", () => {
-      st.sim.run = true; st.sim.main = true; st.sim.var = true;
-      syncAll(); touch(); status(st.wires.length ? "تم تشغيل التجربة" : "وصّل الدايرة الأول");
-    });
+
     $("bWires").addEventListener("click", () => openSheet("wire"));
-    $("btnMenu").addEventListener("click", () => openSheet("file"));
-    $("btnInfo").addEventListener("click", () => status("Labtronic - Electrical Lab Simulator"));
+    const about = $("about");
+    const showAbout = () => { about.classList.add("open"); about.setAttribute("aria-hidden", "false"); };
+    const hideAbout = () => { about.classList.remove("open"); about.setAttribute("aria-hidden", "true"); };
+    $("btnInfo").addEventListener("click", showAbout);
+    $("aboutClose").addEventListener("click", hideAbout);
+    about.addEventListener("click", e => { if (e.target === about) hideAbout(); });
     $("btnGuide").addEventListener("click", () => status("اضغط مطولاً على طرف لإظهار نفس النقطة، وعلى سلك لحذفه"));
-    $("btnSettings").addEventListener("click", () => openSheet("sim"));
+
     $("bUndo").addEventListener("click", () => { if (st.wires.length) { st.wires.pop(); st.sel = null; st.hl = new Set(); touch(); } });
     $("btnFit").addEventListener("click", fit);
     // wire sheet

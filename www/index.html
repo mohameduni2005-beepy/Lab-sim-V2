@@ -17,9 +17,6 @@
   </picture>
 </div>
 <header id="hdr">
-  <button id="btnMenu" class="ib" aria-label="menu">
-    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 6h18M3 12h18M3 18h18" stroke="#e8eefc" stroke-width="2.2" stroke-linecap="round"/></svg>
-  </button>
   <div class="brand">
     <svg class="bolt" viewBox="0 0 64 64" aria-hidden="true">
       <ellipse cx="32" cy="34" rx="28" ry="12" transform="rotate(-18 32 34)" fill="none" stroke="#ffc20e" stroke-width="4"/>
@@ -30,7 +27,6 @@
   <div class="hbtns">
     <button id="btnInfo" class="hb2" aria-label="info">i</button>
     <button id="btnGuide" class="hb2" aria-label="guide">&#x1F4D6;</button>
-    <button id="btnSettings" class="hb2" aria-label="settings">&#9881;</button>
   </div>
 <nav id="tabs" class="tabs">
   <button data-tab="labs" class="tab on">&#x26A1; لوحات التجارب</button>
@@ -89,11 +85,7 @@
 
 <nav id="bar" class="bar">
   <button id="bUndo" class="tb"><span class="ic">&#x21B6;</span>تراجع</button>
-  <button data-sheet="file" class="tb"><span class="ic">&#x1F4C1;</span>ملف</button>
-  <button id="bRun" class="tb run"><span class="ic">&#x25B6;</span>تشغيل التجربة</button>
-  <button data-sheet="sim" class="tb"><span class="ic">&#x3030;</span>المحاكاة</button>
   <button id="bWires" class="tb"><span class="ic">&#x2387;</span>الأسلاك</button>
-  <button data-sheet="dev" class="tb"><span class="ic">&#x25A3;</span>الأجهزة</button>
   <div class="zoomgrp">
     <button id="zIn" class="tb sm"><span class="ic">+</span>تكبير</button>
     <button id="zOut" class="tb sm"><span class="ic">&minus;</span>تصغير</button>
@@ -101,6 +93,22 @@
   </div>
 </nav>
 
+
+<div id="about" class="about" aria-hidden="true">
+  <div class="about-card" role="dialog" aria-label="About Labtronic">
+    <button id="aboutClose" class="about-x" aria-label="close">&times;</button>
+    <svg class="about-bolt" viewBox="0 0 64 64" aria-hidden="true">
+      <ellipse cx="32" cy="34" rx="28" ry="12" transform="rotate(-18 32 34)" fill="none" stroke="#ffc20e" stroke-width="4"/>
+      <polygon points="36,4 14,36 30,36 24,60 50,26 33,26" fill="#29b6f6"/>
+    </svg>
+    <div class="about-title"><span class="w">Lab</span><span class="c">tronic</span></div>
+    <div class="about-sub">Electrical Lab Simulator</div>
+    <div class="about-line"></div>
+    <div class="about-row"><span class="k">Designed by</span><span class="v">Mohamed Eldeify</span></div>
+    <a class="about-row about-mail" href="mailto:mohameduni2005@gmail.com"><span class="k">Email</span><span class="v">mohameduni2005@gmail.com</span></a>
+    <div class="about-foot">Connect &bull; Learn &bull; Experiment</div>
+  </div>
+</div>
 <script src="js/data.js"></script>
 <script src="js/sim.js"></script>
 <script src="js/app.js"></script>
