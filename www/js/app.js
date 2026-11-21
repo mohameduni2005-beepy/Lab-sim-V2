@@ -171,18 +171,27 @@
       if (!vis(p.id)) return;
       const o = origin[p.id], x = o.x * s + view.tx, y = o.y * s + view.ty, w = PANEL_W * s, h = p.h * K * s, rc = CORNER * s;
       if (x > CW || y > CH || x + w < 0 || y + h < 0) return;
-      c.fillStyle = "#050a1a"; rr(c, x + 3, y + 6, w + 8, h + 8, rc + 6); c.fill();
-      c.fillStyle = BG1; c.strokeStyle = "#1e3a8a"; c.lineWidth = 2; rr(c, x - 10, y - 10, w + 20, h + 20, rc + 10); c.fill(); c.stroke();
+      const barH = Math.max(22, 30 * s), pad = Math.max(6, 10 * s);
+      // card shadow + body
+      c.fillStyle = "rgba(0,0,0,.45)"; rr(c, x + 4, y + 8, w + 8, h + barH + 22 * s, rc + 6); c.fill();
+      const g = c.createLinearGradient(x, y, x, y + h + barH);
+      g.addColorStop(0, "#0c2552"); g.addColorStop(1, "#071a3f");
+      c.fillStyle = g; c.strokeStyle = "#29b6f6"; c.lineWidth = 2;
+      rr(c, x - pad, y - barH - pad, w + 2 * pad, h + barH + 2 * pad, rc + 8); c.fill(); c.stroke();
+      // title bar
+      c.fillStyle = "#0e2e66"; c.save(); rr(c, x - pad, y - barH - pad, w + 2 * pad, barH + pad, rc + 8); c.fill(); c.restore();
+      c.fillStyle = "#ffc20e"; c.font = "bold " + Math.max(11, 15 * s) + "px Segoe UI, Arial, sans-serif"; c.textBaseline = "middle";
+      c.fillText("\u26A1 " + p.title, x + pad + 4, y - barH / 2 - pad / 2);
+      c.strokeStyle = "#29b6f6"; c.lineWidth = 1.5; c.beginPath(); c.arc(x + w - pad - 2, y - barH / 2 - pad / 2, Math.max(7, 9 * s), 0, 6.2832); c.stroke();
+      c.fillStyle = "#29b6f6"; c.font = "bold " + Math.max(9, 11 * s) + "px Segoe UI, Arial"; c.textAlign = "center"; c.fillText("i", x + w - pad - 2, y - barH / 2 - pad / 2 + 1); c.textAlign = "left";
+      // photo area
       const im = imgs[p.id];
       c.save(); rr(c, x, y, w, h, rc); c.clip();
+      c.fillStyle = "#f4f6fa"; c.fillRect(x, y, w, h);
       if (im && im.complete && im.naturalWidth) c.drawImage(im, x, y, w, h); else { c.fillStyle = "#334"; c.fillRect(x, y, w, h); }
       c.restore();
-      c.strokeStyle = CYAN; c.lineWidth = 2; rr(c, x, y, w, h, rc); c.stroke();
-      const fs = Math.max(11, 13 * s);
-      c.font = "bold " + fs + "px Segoe UI, Arial, sans-serif";
-      const tw = c.measureText(p.title).width;
-      c.fillStyle = BG2; c.strokeStyle = CYAN; c.lineWidth = 1; rr(c, x + 2, y - 14 - fs - 8, tw + 20, fs + 12, 10); c.fill(); c.stroke();
-      c.fillStyle = YEL; c.textBaseline = "alphabetic"; c.fillText(p.title, x + 12, y - 18);
+      c.strokeStyle = "#29b6f6"; c.lineWidth = 1.5; rr(c, x, y, w, h, rc); c.stroke();
+      c.textBaseline = "alphabetic";
     });
     // terminals & switches
     refreshAttach();
@@ -332,9 +341,25 @@
     let moving = false;
     while (acc >= 50) { acc -= 50; if (stepPhysics()) moving = true; }
     if (dirty || needRedraw || moving || st.hl.size || st.pending) { render(); needRedraw = false; }
+    updateConn();
   }
 
   // ------------------------------------------------------------------ state changes
+  let connLast = "";
+  function updateConn() {
+    const el = document.getElementById("connState"); if (!el) return;
+    const ok = st.wires.length > 0 && st.sim.main;
+    const txt = st.sim.run ? (ok ? "\u25CF جاهز للتشغيل" : "\u25CF غير موصّل") : "\u25CF متوقف";
+    const cls = st.sim.run ? (ok ? "ready" : "bad") : "stop";
+    const key = txt + cls; if (key === connLast) return; connLast = key;
+    el.textContent = txt; el.className = "conn " + cls;
+  }
+  const hist = [];
+  function snapshot() { hist.push(JSON.stringify(st.wires)); if (hist.length > 60) hist.shift(); }
+  function undo() {
+    if (!hist.length) { status("لا يوجد ما يُراجع"); return; }
+    st.wires = JSON.parse(hist.pop()); st.sel = null; st.pending = null; st.hl = new Set(); touch(); status("تم التراجع");
+  }
   function touch() { dirty = needRedraw = simDirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 400); }
   function status(t) { $("status").textContent = t; }
   function stateObj() {
@@ -364,7 +389,7 @@
       else if (st.pending === h) { st.pending = null; status(""); }
       else {
         if (!st.wires.some(w => (w.a === st.pending && w.b === h) || (w.a === h && w.b === st.pending)))
-          st.wires.push({ a: st.pending, b: h, color: st.color, w: st.width, curve: st.curve });
+          { snapshot(); st.wires.push({ a: st.pending, b: h, color: st.color, w: st.width, curve: st.curve }); }
         st.pending = null; status("");
       }
       touch(); return;
@@ -386,7 +411,7 @@
       dirty = needRedraw = true; return;
     }
     const wi = hitWire(x, y);
-    if (wi !== null) { st.wires.splice(wi, 1); st.sel = null; st.hl = new Set(); status("تم حذف السلك"); touch(); return; }
+    if (wi !== null) { snapshot(); st.wires.splice(wi, 1); st.sel = null; st.hl = new Set(); status("تم حذف السلك"); touch(); return; }
     st.hl = new Set(); st.pending = null; status(""); dirty = needRedraw = true;
   }
   function zoomAt(f, cx, cy) {
@@ -457,8 +482,13 @@
     syncWireUI(); touch();
   }
   function openSheet(name) {
+    if (name === "wire") syncWireUI();
     document.querySelectorAll(".sheet").forEach(s => s.classList.toggle("open", s.id === "sh-" + name && !s.classList.contains("open")));
-    document.querySelectorAll("#bar button[data-sheet]").forEach(b => b.classList.toggle("on", $("sh-" + b.dataset.sheet).classList.contains("open")));
+    document.querySelectorAll("#bar button[data-sheet], #tabs button[data-tab]").forEach(b => {
+      const key = b.dataset.sheet || b.dataset.tab;
+      const sh = $("sh-" + key);
+      b.classList.toggle("on", !!sh && sh.classList.contains("open"));
+    });
     setTimeout(() => { resize(); }, 0);
   }
   function buildDevices() {
@@ -499,6 +529,24 @@
   }
   function bindUI() {
     document.querySelectorAll("#bar button[data-sheet]").forEach(b => b.addEventListener("click", () => openSheet(b.dataset.sheet)));
+    document.querySelectorAll("#tabs button[data-tab]").forEach(b => b.addEventListener("click", () => {
+      const t = b.dataset.tab;
+      if (t === "labs") { document.querySelectorAll(".sheet").forEach(s => s.classList.remove("open")); openSheet("__none"); }
+      else openSheet(t === "devices" ? "dev" : t);
+      document.querySelectorAll("#tabs button[data-tab]").forEach(x => x.classList.toggle("on", x === b));
+    }));
+    $("zIn").addEventListener("click", () => { zoomAt(1.25, CW / 2, CH / 2); dirty = needRedraw = true; });
+    $("zOut").addEventListener("click", () => { zoomAt(0.8, CW / 2, CH / 2); dirty = needRedraw = true; });
+    $("bUndo").addEventListener("click", undo);
+    $("bRun").addEventListener("click", () => {
+      st.sim.run = true; st.sim.main = true; st.sim.var = true;
+      syncAll(); touch(); status(st.wires.length ? "تم تشغيل التجربة" : "وصّل الدايرة الأول");
+    });
+    $("bWires").addEventListener("click", () => openSheet("wire"));
+    $("btnMenu").addEventListener("click", () => openSheet("file"));
+    $("btnInfo").addEventListener("click", () => status("Labtronic - Electrical Lab Simulator"));
+    $("btnGuide").addEventListener("click", () => status("اضغط مطولاً على طرف لإظهار نفس النقطة، وعلى سلك لحذفه"));
+    $("btnSettings").addEventListener("click", () => openSheet("sim"));
     $("bUndo").addEventListener("click", () => { if (st.wires.length) { st.wires.pop(); st.sel = null; st.hl = new Set(); touch(); } });
     $("btnFit").addEventListener("click", fit);
     // wire sheet
@@ -538,6 +586,11 @@
   }
 
   // ------------------------------------------------------------------ boot
+  function hideSplash() {
+    const sp = document.getElementById("splash"); if (!sp) return;
+    sp.classList.add("hide");
+    setTimeout(() => { sp.remove(); resize(); fit(); }, 700);
+  }
   function boot() {
     PANELS.forEach(p => { const im = new Image(); im.onload = () => { dirty = needRedraw = true; }; im.src = "images/" + p.file; imgs[p.id] = im; });
     loadState(); relayout(); resize(); bindUI(); bindCanvas(); buildDevices(); buildSlots(); syncAll(); fit();
@@ -546,6 +599,7 @@
     document.addEventListener("keydown", e => { if (e.key === "Escape") { st.pending = null; st.hl = new Set(); status(""); dirty = needRedraw = true; } if (e.ctrlKey && e.key === "z") $("bUndo").click(); });
     status("المس طرف ثم طرف آخر لتوصيل سلك • اضغط مطولاً على طرف لإظهار نفس النقطة • اضغط مطولاً على سلك لحذفه");
     requestAnimationFrame(frame);
+    setTimeout(hideSplash, 1800);
     window.__cj = { st, view, Sim, tap, longPress, items, origin, itemPos, recompute, render };   // handy for debugging
   }
   boot();
