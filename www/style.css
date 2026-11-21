@@ -154,3 +154,24 @@ body{background:linear-gradient(160deg,#050d24,#0a1a3a 60%,#06142e)}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
 }
+
+/* ================= Compact, consistent sheets ================= */
+.sheet{max-height:34vh;max-height:34dvh;padding:6px 10px 8px;border-radius:12px 12px 0 0}
+.sheet h3{margin:0 0 4px;font-size:12px;letter-spacing:.2px}
+.row{gap:6px;margin:4px 0}
+.rng{gap:6px;margin:4px 0;font-size:12px}
+.chk{padding:3px 0;font-size:12px}
+.chk input{transform:scale(1.05);margin-inline-end:6px}
+.btn{padding:5px 10px;font-size:12px;border-radius:7px;font-weight:700}
+.btn.sm{padding:3px 10px;font-size:14px}
+.hint{font-size:10px;margin:3px 0 0}
+select,input[type=text],textarea{padding:4px 6px;font-size:12px;border-radius:6px}
+textarea{font-size:10px}
+input[type=text]{min-height:0}
+pre{font-size:9.5px;line-height:1.35;padding:5px 6px;margin:4px 0 0;border-radius:7px;max-height:14vh;overflow:auto}
+.slot{margin:2px 0;gap:4px}
+.slot button:first-child{padding:5px 8px;font-size:12px;border-radius:7px}
+.slot .x{padding:0 10px;font-size:12px}
+.sw-color{width:24px;height:24px;border-radius:6px;border-width:2px;margin:0 2px 0 0}
+#customColor{width:30px;height:24px}
+.sheet .btn,.sheet select,.sheet input{vertical-align:middle}
